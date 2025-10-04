@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Voice Bot - Get to Know Me</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            padding: 20px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            max-height: 400px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: #4f46e5;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-content {
+            background: white;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .voice-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .record-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .record-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .recording-status {
+            font-size: 0.9em;
+            color: #64748b;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .text-input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        #textInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #textInput:focus {
+            border-color: #4f46e5;
+        }
+
+        #sendTextBtn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        #sendTextBtn:hover {
+            background: #3730a3;
+        }
+
+        .suggested-questions {
+            padding: 25px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .suggested-questions h3 {
+            margin-bottom: 15px;
+            color: #374151;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .question-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .question-chip {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+
+        .question-chip:hover {
+            background: #4f46e5;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .error-message {
+            color: #dc2626;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .question-chips {
+                flex-direction: column;
+            }
+            
+            .question-chip {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎙️ Personal Voice Bot</h1>
+            <p>Ask me anything and I'll respond as myself!</p>
+        </header>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <strong>Hello! I'm your personal voice bot.</strong><br><br>
+                        You can ask me questions like:
+                        <ul style="margin: 10px 0 10px 20px;">
+                            <li>What should we know about your life story?</li>
+                            <li>What's your #1 superpower?</li>
+                            <li>What areas would you like to grow in?</li>
+                            <li>What misconception do coworkers have about you?</li>
+                            <li>How do you push your boundaries?</li>
+                        </ul>
+                        Click the microphone to ask by voice, or type your question below!
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="voice-controls">
+                    <button id="recordBtn" class="record-btn">
+                        <span class="mic-icon">🎤</span>
+                        <span id="recordText">Click to Speak</span>
+                    </button>
+                    <div id="recordingStatus" class="recording-status">
+                        Click the microphone and ask your question
+                    </div>
+                </div>
+
+                <div class="text-input-section">
+                    <input type="text" id="textInput" placeholder="Or type your question here...">
+                    <button id="sendTextBtn">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="suggested-questions">
+            <h3>Try asking these questions:</h3>
+            <div class="question-chips">
+                <button class="question-chip" data-question="What should we know about your life story in a few sentences?">Life Story</button>
+                <button class="question-chip" data-question="What's your #1 superpower?">Superpower</button>
+                <button class="question-chip" data-question="What are the top 3 areas you'd like to grow in?">Growth Areas</button>
+                <button class="question-chip" data-question="What misconception do your coworkers have about you?">Misconception</button>
+                <button class="question-chip" data-question="How do you push your boundaries and limits?">Pushing Boundaries</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
