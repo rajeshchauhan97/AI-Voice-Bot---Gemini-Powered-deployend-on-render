@@ -19,7 +19,7 @@ app = FastAPI()
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with frontend origin in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,26 +53,28 @@ def detect_intent(text: str):
         return "push boundaries"
     return None
 
-# Gemini chat call
-def call_gemini_chat(prompt: str):
+# Gemini 1.5 Flash chat call
+def call_gemini_flash(prompt: str):
     if not GEMINI_API_KEY:
         return None
-    url = "https://generativeai.googleapis.com/v1beta2/models/text-bison-001:generate"
+    url = "https://generativeai.googleapis.com/v1beta2/models/gemini-1.5-flash:generateMessage"
     headers = {
         "Authorization": f"Bearer {GEMINI_API_KEY}",
         "Content-Type": "application/json",
     }
     data = {
-        "prompt": {"text": prompt},
+        "input": {"text": prompt},
         "temperature": 0.6,
-        "maxOutputTokens": 300
+        "candidateCount": 1,
+        "topP": 0.95,
+        "topK": 40
     }
     try:
         resp = requests.post(url, headers=headers, json=data, timeout=15)
         if resp.status_code != 200:
             return None
         res = resp.json()
-        return res.get("candidates", [{}])[0].get("content", "").strip()
+        return res.get("candidates", [{}])[0].get("content", {}).get("text", "").strip()
     except Exception:
         return None
 
@@ -94,10 +96,10 @@ async def chat(req: Request):
 
     intent = detect_intent(text)
 
-    # Try Gemini if available
+    # Try Gemini 1.5 Flash if available
     if GEMINI_API_KEY:
         loop = asyncio.get_event_loop()
-        ai_answer = await loop.run_in_executor(None, lambda: call_gemini_chat(text))
+        ai_answer = await loop.run_in_executor(None, lambda: call_gemini_flash(text))
         if ai_answer:
             return {"ok": True, "source": "gemini", "text": ai_answer}
 
@@ -110,12 +112,10 @@ async def chat(req: Request):
                "Please try rephrasing or ask a specific follow-up.")
     return {"ok": True, "source": "fallback", "text": generic}
 
-# Audio transcription (still OpenAI Whisper if you want)
+# Audio transcription (not implemented for Gemini Flash)
 @app.post("/transcribe-audio")
 async def transcribe_audio(file: UploadFile = File(...)):
-    if not GEMINI_API_KEY:
-        return {"ok": False, "error": "Server has no GEMINI_API_KEY for transcription."}
-    return {"ok": False, "error": "Audio transcription is not implemented for Gemini yet."}
+    return {"ok": False, "error": "Audio transcription is not implemented for Gemini 1.5 Flash yet."}
 
 # Run app
 if __name__ == "__main__":
