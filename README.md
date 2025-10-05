@@ -1,81 +1,203 @@
-# Personal Voice Bot — Production-ready ZIP
+# 🎤 Personal Voice Bot
 
-This project provides a universally user-friendly voice bot web app (frontend + backend) that answers questions in the assistant's voice. It supports:
-- Browser-based voice recording (Web Speech API)
-- Text input fallback
-- Browser TTS (speechSynthesis)
-- Server-side AI (OpenAI) if `OPENAI_API_KEY` is set on the host; otherwise deterministic canned replies are used.
-- Docker and Render deployment instructions.
+A conversational voice bot built with **FastAPI** and **Gemini 1.5** for AI responses. Includes a frontend for chat and optional audio transcription. Fully deployable on **Render**.
 
-## Structure
+---
+
+## 🌟 Features
+
+- AI-powered chat using **Gemini 1.5** (`text-bison-001`) model.
+- Fallback canned responses when AI key is missing.
+- Serve frontend (`HTML/JS`) from FastAPI.
+- CORS enabled for frontend integration.
+- Optional audio transcription placeholder (OpenAI Whisper can be used).
+- Ready for Docker deployment and Render cloud deployment.
+
+---
+
+## 📁 Project Structure
+
+```
+
 personal-voicebot/
 ├─ backend/
 │  ├─ app.py
 │  ├─ requirements.txt
-│  ├─ Dockerfile
-│  └─ Procfile
+│  ├─ .env
+│  └─ venv/            # Local virtual environment
 ├─ frontend/
 │  ├─ index.html
-│  ├─ app.js
-│  └─ package.json
-├─ docker-compose.yml
+│  ├─ style.css
+│  └─ main.js
+├─ Dockerfile
 └─ README.md
 
-## Quick local testing (recommended)
-### Option A — Run with Docker Compose (recommended)
-1. Install Docker and Docker Compose.
-2. In the project root:
-   ```bash
-   docker-compose up --build
-   ```
-3. Open the frontend: http://localhost:3000
-   Backend: http://localhost:8000
+````
 
-### Option B — Run backend locally (Python)
-1. (Optional) Create a virtual environment:
+---
+
+## ⚡ Prerequisites
+
+- Python 3.10+
+- Node.js 18+ (optional for frontend development)
+- Git
+- Render account
+- Gemini API key (`GEMINI_API_KEY`)
+
+---
+
+## 🐍 Backend Setup (Local)
+
+1. **Clone the repo**:
+   ```bash
+   git clone https://github.com/rajeshchauhan97/personal-voicebot-deployed-on-render.git
+   cd personal-voicebot/backend
+````
+
+2. **Create virtual environment**:
+
    ```bash
    python -m venv venv
-   source venv/bin/activate  # or venv\Scripts\activate on Windows
    ```
-2. Install backend dependencies:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn app:app --reload --host 0.0.0.0 --port 8000
-   ```
-3. Serve frontend by opening `frontend/index.html` in a browser (or use live-server / simple static server).
 
-## Deploy to Render (recommended)
-### Backend
-1. Create a new **Web Service** on Render, connecting your GitHub repo and selecting the `backend` folder.
-2. Build Command:
+3. **Activate virtual environment**:
+
+   * Windows:
+
+     ```bash
+     venv\Scripts\activate
+     ```
+   * Linux/macOS:
+
+     ```bash
+     source venv/bin/activate
+     ```
+
+4. **Install dependencies**:
+
+   ```bash
+pip install -r requirements.txt
    ```
-   pip install -r requirements.txt
+
+5. **Set environment variables**:
+
+   * Create a `.env` file in `backend/`:
+
+     ```
+     GEMINI_API_KEY=your_gemini_1.5_api_key_here
+     PORT=8000
+     ```
+
+6. **Run the backend**:
+
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8000
    ```
-3. Start Command:
+
+7. **Test locally**:
+
+   * Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
+   * Chat endpoint: POST `/chat` with JSON:
+
+     ```json
+     { "text": "Tell me your superpower" }
+     ```
+
+---
+
+## 💻 Frontend Setup (Optional)
+
+1. **Install live-server globally (Node.js required)**:
+
+   ```bash
+   npm install -g live-server
    ```
+
+2. **Run frontend**:
+
+   ```bash
+   cd ../frontend
+   live-server --port=3000 --entry-file=index.html
+   ```
+
+3. Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
+
+---
+
+## 🐙 Git Setup for Deployment
+
+1. **Initialize Git** (if not already):
+
+   ```bash
+   git init
+   git branch -M main
+   ```
+
+2. **Add remote**:
+
+   ```bash
+   git remote add origin https://github.com/rajeshchauhan97/personal-voicebot-deployed-on-render.git
+   ```
+
+3. **Commit changes**:
+
+   ```bash
+   git add .
+   git commit -m "Initial commit: Personal Voice Bot with Gemini"
+   ```
+
+4. **Pull remote first** (if repo is not empty):
+
+   ```bash
+   git pull origin main --allow-unrelated-histories
+   ```
+
+5. **Push to GitHub**:
+
+   ```bash
+   git push -u origin main
+   ```
+
+---
+
+## 🚀 Deploy to Render
+
+1. Go to [Render.com](https://render.com) → **New Web Service**.
+2. Connect GitHub repository.
+3. Select **Branch:** `main`.
+4. **Build Command**:
+
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+5. **Start Command**:
+
+   ```bash
    uvicorn app:app --host 0.0.0.0 --port $PORT
    ```
-4. In Render dashboard -> Environment, add `OPENAI_API_KEY` as a secret if you want live AI responses.
+6. Add **Environment Variables** in Render:
 
-### Frontend
-1. Create a new **Static Site** on Render, connecting the same repo and selecting the `frontend` folder.
-2. Build Command:
    ```
-   npm install && npm run build
+   GEMINI_API_KEY = your_gemini_1.5_api_key_here
+   PORT = 8000
    ```
-   (This project uses a small static page; you can also host the static files by serving them from the backend.)
-3. In the frontend, point the backend base URL to the backend service URL (or use the same origin if backend serves frontend).
+7. Deploy! Your backend will be live on Render URL. The frontend is served automatically via FastAPI StaticFiles.
 
-## Notes
-- **No end-user API key entry is required.** Add `OPENAI_API_KEY` only on the server (Render/Heroku environment variables).
-- For production, restrict CORS to your frontend origin rather than '*'.
-- Consider adding rate-limiting and authentication if you expose the app publicly.
+---
 
-## Sample questions the bot answers (canned)
-- "What should we know about your life story in a few sentences?"
-- "What's your #1 superpower?"
-- "What are the top 3 areas you'd like to grow in?"
-- "What misconception do your coworkers have about you?"
-- "How do you push your boundaries and limits?"
+## ⚠️ Notes
+
+* Gemini 1.5 is required for AI responses. Without a valid key, the app will return **fallback canned responses**.
+* Audio transcription for Gemini is **not implemented** yet.
+* For production, update CORS `allow_origins` to your frontend domain.
+
+---
+
+## 📫 Contact
+
+* GitHub: [rajeshchauhan97](https://github.com/rajeshchauhan97)
+* Email: `sabhavathraju123@gmail.com`
+
+---
+
 
