@@ -2,12 +2,17 @@ from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from dotenv import load_dotenv
 import os
 import uvicorn
 import requests
 import asyncio
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# Load .env file
+load_dotenv()
+
+# Gemini API key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 app = FastAPI()
 
@@ -24,7 +29,7 @@ app.add_middleware(
 if os.path.exists("frontend"):
     app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
-# Canned responses for example questions
+# Canned responses
 CANNED_RESPONSES = {
     "life story": "I was trained on a broad range of text to help people learn, build, and write. I focus on clarity, friendly explanations, and practical next steps.",
     "superpower": "My #1 superpower is turning complex ideas into clear, actionable explanations and examples — I make things easier to understand and use.",
@@ -33,6 +38,7 @@ CANNED_RESPONSES = {
     "push boundaries": "I push boundaries by trying new formats, running small experiments, asking better questions, and learning quickly from feedback and failures.",
 }
 
+# Detect intent
 def detect_intent(text: str):
     t = text.lower()
     if any(k in t for k in ["life story", "about your life", "who are you", "tell me about your life"]):
@@ -47,33 +53,30 @@ def detect_intent(text: str):
         return "push boundaries"
     return None
 
-def call_openai_chat(prompt: str):
-    if not OPENAI_API_KEY:
+# Gemini chat call
+def call_gemini_chat(prompt: str):
+    if not GEMINI_API_KEY:
         return None
-    url = "https://api.openai.com/v1/chat/completions"
+    url = "https://generativeai.googleapis.com/v1beta2/models/text-bison-001:generate"
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Bearer {GEMINI_API_KEY}",
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "system", "content": "You are a helpful, concise, and friendly assistant. Answer in the voice of the assistant."},
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": 300,
+        "prompt": {"text": prompt},
         "temperature": 0.6,
+        "maxOutputTokens": 300
     }
     try:
         resp = requests.post(url, headers=headers, json=data, timeout=15)
         if resp.status_code != 200:
             return None
         res = resp.json()
-        return res.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        return res.get("candidates", [{}])[0].get("content", "").strip()
     except Exception:
         return None
 
-# Root route (fixes 404)
+# Root route
 @app.get("/", response_class=HTMLResponse)
 async def root():
     if os.path.exists("frontend/index.html"):
@@ -91,37 +94,28 @@ async def chat(req: Request):
 
     intent = detect_intent(text)
 
-    # Try OpenAI if available
-    if OPENAI_API_KEY:
+    # Try Gemini if available
+    if GEMINI_API_KEY:
         loop = asyncio.get_event_loop()
-        ai_answer = await loop.run_in_executor(None, lambda: call_openai_chat(text))
+        ai_answer = await loop.run_in_executor(None, lambda: call_gemini_chat(text))
         if ai_answer:
-            return {"ok": True, "source": "openai", "text": ai_answer}
+            return {"ok": True, "source": "gemini", "text": ai_answer}
 
     # Use canned responses
     if intent and intent in CANNED_RESPONSES:
         return {"ok": True, "source": "canned", "text": CANNED_RESPONSES[intent]}
 
+    # Fallback
     generic = ("I don't have an AI key set on the server, so here's a helpful assistant-style reply: "
                "Please try rephrasing or ask a specific follow-up.")
     return {"ok": True, "source": "fallback", "text": generic}
 
-# Audio transcription
+# Audio transcription (still OpenAI Whisper if you want)
 @app.post("/transcribe-audio")
 async def transcribe_audio(file: UploadFile = File(...)):
-    if not OPENAI_API_KEY:
-        return {"ok": False, "error": "Server has no OPENAI_API_KEY for transcription."}
-    url = "https://api.openai.com/v1/audio/transcriptions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-    files = {"file": (file.filename, await file.read())}
-    data = {"model": "whisper-1"}
-    try:
-        resp = requests.post(url, headers=headers, files=files, data=data, timeout=60)
-        if resp.status_code != 200:
-            return {"ok": False, "error": resp.text}
-        return resp.json()
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
+    if not GEMINI_API_KEY:
+        return {"ok": False, "error": "Server has no GEMINI_API_KEY for transcription."}
+    return {"ok": False, "error": "Audio transcription is not implemented for Gemini yet."}
 
 # Run app
 if __name__ == "__main__":
