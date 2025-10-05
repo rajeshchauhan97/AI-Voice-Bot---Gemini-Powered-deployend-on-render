@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personal Voice Bot — Demo</title>
+    <style>
+      body { font-family: Arial, sans-serif; display:flex; height:100vh; align-items:center; justify-content:center; background:#f6f8fa; margin:0; }
+      .card { width:720px; max-width:95%; padding:20px; border-radius:12px; background:white; box-shadow:0 6px 18px rgba(0,0,0,0.08);} 
+      button { padding:10px 14px; border-radius:8px; border:none; cursor:pointer }
+      .controls { display:flex; gap:10px; margin-top:10px }
+      .history { margin-top:16px; max-height:300px; overflow:auto; }
+      .bubble { margin-bottom:10px; padding:10px; border-radius:8px; }
+      .user { background:#eef; text-align:right }
+      .bot { background:#efe }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Personal Voice Bot — Demo</h2>
+      <div>
+        <input id="textInput" placeholder="Type a question or use the mic" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd" />
+      </div>
+      <div class="controls">
+        <button id="micBtn">🎤 Start Voice</button>
+        <button id="sendBtn">Send</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+      <div class="history" id="history"></div>
+      <p style="margin-top:12px; font-size:0.9em; color:#666">Note: This demo uses your browser's speech recognition and speech synthesis. If the server has an OpenAI key set, AI responses will be generated; otherwise canned fallback responses are used.</p>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
