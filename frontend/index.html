@@ -361,7 +361,7 @@
                     <div class="message bot-message">
                         <div class="avatar bot-avatar">🤖</div>
                         <div class="message-content bot-content">
-                            <p>Hello! I'm your personal voice bot. Ask me anything - I can answer both personal questions about my experiences and general knowledge questions from my perspective!</p>
+                            <p>Hello! I'm your personal voice bot. Click the microphone to speak your questions, or use the suggested questions above. I'll answer personally about my experiences and perspectives.</p>
                         </div>
                     </div>
                 </div>
@@ -381,7 +381,7 @@
                     </div>
                     
                     <div class="input-area">
-                        <input type="text" class="text-input" id="textInput" placeholder="Ask me anything...">
+                        <input type="text" class="text-input" id="textInput" placeholder="Or type your question here...">
                         <button class="send-btn" id="sendBtn">Send</button>
                     </div>
                 </div>
@@ -419,6 +419,7 @@
             }
 
             checkBrowserSupport() {
+                // Check if browser supports speech recognition
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                     this.showError('Speech recognition not supported in your browser. Please use Chrome, Edge, or Safari.');
                     this.voiceBtn.disabled = true;
@@ -426,6 +427,7 @@
                     return false;
                 }
 
+                // Check if browser supports speech synthesis
                 if (!('speechSynthesis' in window)) {
                     this.showError('Text-to-speech not supported in your browser.');
                     return false;
@@ -472,6 +474,7 @@
                         this.audioWave.classList.remove('active');
                         this.updateStatus('Ready', 'success');
                         
+                        // Auto-send if we have text
                         if (this.textInput.value.trim()) {
                             setTimeout(() => this.sendMessage(), 500);
                         }
@@ -575,7 +578,7 @@
                 
                 setTimeout(() => {
                     this.removeTyping(typingIndicator);
-                    const response = this.generateIntelligentResponse(question);
+                    const response = this.generatePersonalResponse(question);
                     this.addMessage(response, 'bot');
                     
                     this.speakText(response);
@@ -583,7 +586,7 @@
                 }, 1000 + Math.random() * 1000);
             }
 
-            generateIntelligentResponse(question) {
+            generatePersonalResponse(question) {
                 const lowerQuestion = question.toLowerCase();
                 
                 // Personal responses as per assessment requirements
@@ -602,33 +605,8 @@
                 else if (lowerQuestion.includes('boundaries') || lowerQuestion.includes('limits') || lowerQuestion.includes('challenge') || lowerQuestion.includes('push')) {
                     return "I constantly push my boundaries by taking on projects outside my comfort zone, actively seeking feedback to identify blind spots, and learning emerging technologies before they become mainstream. I believe that growth happens when we step beyond what's familiar and embrace the discomfort of learning something completely new.";
                 }
-                
-                // Intelligent responses for common technical questions
-                else if (lowerQuestion.includes('python')) {
-                    return "From my experience, Python is an incredibly versatile programming language that I've used extensively for AI and web development. What I love about it is how readable and expressive it is - it feels like you're writing pseudocode that actually works. I often use Python for rapid prototyping and data analysis projects.";
-                }
-                else if (lowerQuestion.includes('javascript') || lowerQuestion.includes('js')) {
-                    return "JavaScript has been essential in my web development journey. I appreciate how it runs everywhere - browsers, servers, even mobile apps. The ecosystem around it, especially Node.js and modern frameworks, makes it incredibly powerful for building full-stack applications.";
-                }
-                else if (lowerQuestion.includes('ai') || lowerQuestion.includes('artificial intelligence')) {
-                    return "AI is what drives my passion for technology. I see it as a tool that can augment human capabilities rather than replace them. In my work, I focus on practical AI applications that solve real problems while being mindful of ethical considerations and responsible development practices.";
-                }
-                else if (lowerQuestion.includes('programming') || lowerQuestion.includes('coding')) {
-                    return "Programming, to me, is like learning a new language to communicate with computers. What excites me most is how it enables us to turn abstract ideas into tangible solutions. I approach coding with a problem-solving mindset, always looking for the most elegant and maintainable solution.";
-                }
-                else if (lowerQuestion.includes('technology') || lowerQuestion.includes('tech')) {
-                    return "Technology fascinates me because it's the bridge between human needs and digital solutions. I believe the best technology serves people quietly in the background, enhancing lives without demanding attention. My approach is to focus on user-centered design and practical applications.";
-                }
-                else if (lowerQuestion.includes('career') || lowerQuestion.includes('job') || lowerQuestion.includes('work')) {
-                    return "In my career, I've learned that success comes from continuous learning and adaptability. I value environments where I can tackle challenging problems while collaborating with talented people. For me, meaningful work is about creating impact and growing both technically and personally.";
-                }
-                else if (lowerQuestion.includes('learn') || lowerQuestion.includes('study')) {
-                    return "My learning philosophy is built on curiosity and practical application. I believe the best way to learn is by doing - building projects, making mistakes, and iterating. I also find that teaching concepts to others deepens my own understanding significantly.";
-                }
-                
-                // General knowledge with personal perspective
                 else {
-                    return "That's an interesting question! Based on my experiences in technology and continuous learning, I approach most topics with curiosity and a practical mindset. I believe understanding comes from asking good questions and being open to different perspectives. What specifically would you like to know more about?";
+                    return "That's an interesting question! Based on my experiences with technology and problem-solving, I approach challenges with curiosity and a focus on practical solutions. I believe in learning through doing and constantly refining my approach based on real-world feedback and results.";
                 }
             }
 
