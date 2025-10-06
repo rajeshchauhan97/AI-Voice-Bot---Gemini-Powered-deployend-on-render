@@ -181,99 +181,46 @@ pip install -r requirements.txt
 
 3. Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
 
----
 
-## 🐙 Git Setup for Deployment
+### 1. **Initialize Git (if not already)**
 
-1. **Initialize Git** (if not already):
-
-   ```bash
-   git init
-   git branch -M main
-   ```
-
-2. **Add remote**:
-
-   ```bash
-   git remote add origin https://github.com/rajeshchauhan97/personal-voicebot-deployed-on-render.git
-   ```
-
-3. **Commit changes**:
-
-   ```bash
-   git add .
-   git commit -m "Initial commit: Personal Voice Bot with Gemini"
-   ```
-
-4. **Pull remote first** (if repo is not empty):
-
-   ```bash
-   git pull origin main --allow-unrelated-histories
-   ```
-
-5. **Push to GitHub**:
-
-   ```bash
-   git push -u origin main
-   ```
+```bash
+cd /path/to/personal-voicebot
+git init
+git branch -M main
+```
 
 ---
 
-## 🚀 Deploy to Render
+### 2. **Add all files**
 
-1. Go to [Render.com](https://render.com) → **New Web Service**.
-2. Connect GitHub repository.
-3. Select **Branch:** `main`.
-4. **Build Command**:
-
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
-5. **Start Command**:
-
-   ```bash
-   uvicorn app:app --host 0.0.0.0 --port $PORT
-   ```
-6. Add **Environment Variables** in Render:
-
-   ```
-   GEMINI_API_KEY = your_gemini_1.5_api_key_here
-   PORT = 8000
-   ```
-7. Deploy! Your backend will be live on Render URL. The frontend is served automatically via FastAPI StaticFiles.
-
----
-<<<<<<< HEAD
-
-## ⚠️ Notes
-
-* Gemini 1.5 is required for AI responses. Without a valid key, the app will return **fallback canned responses**.
-* Audio transcription for Gemini is **not implemented** yet.
-* For production, update CORS `allow_origins` to your frontend domain.
+```bash
+git add .
+```
 
 ---
 
-## 📫 Contact
+### 3. **Commit changes**
 
-* GitHub: [rajeshchauhan97](https://github.com/rajeshchauhan97)
-* Email: `sabhavathraju123@gmail.com`
-
----
-
-=======
-
-## ⚠️ Notes
->>>>>>> 46c2feafb12cfe72ce9c777df563aadccb51dd76
-
-* Gemini 1.5 is required for AI responses. Without a valid key, the app will return **fallback canned responses**.
-* Audio transcription for Gemini is **not implemented** yet.
-* For production, update CORS `allow_origins` to your frontend domain.
+```bash
+git commit -m "Initial commit: Personal Voice Bot ready for Render deployment"
+```
 
 ---
 
-## 📫 Contact
+### 4. **Set remote repository**
 
-* GitHub: [rajeshchauhan97](https://github.com/rajeshchauhan97)
-* Email: `sabhavathraju123@gmail.com`
+```bash
+git remote add origin https://github.com/<your-username>/<your-repo>.git
+```
 
 ---
+
+### 5. **Force push to remote**
+
+> ⚠️ **Warning:** This will overwrite the remote branch `main`. Only use if you are sure you want to replace it.
+
+```bash
+git push origin main --force
+```
+
