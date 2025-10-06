@@ -32,10 +32,29 @@ personal-voicebot/
 ├─ Dockerfile
 └─ README.md
 
+<<<<<<< HEAD
 ````
 
 ---
 
+=======
+# 🎤 Personal Voice Bot
+
+A conversational voice bot built with **FastAPI** and **Gemini 1.5** for AI responses. Includes a frontend for chat and optional audio transcription. Fully deployable on **Render**.
+
+---
+
+## 🌟 Features
+
+- AI-powered chat using **Gemini 1.5** (`text-bison-001`) model.
+- Fallback canned responses when AI key is missing.
+- Serve frontend (`HTML/JS`) from FastAPI.
+- CORS enabled for frontend integration.
+- Optional audio transcription placeholder (OpenAI Whisper can be used).
+- Ready for Docker deployment and Render cloud deployment.
+
+
+>>>>>>> 46c2feafb12cfe72ce9c777df563aadccb51dd76
 ## ⚡ Prerequisites
 
 - Python 3.10+
@@ -76,6 +95,7 @@ personal-voicebot/
 4. **Install dependencies**:
 
    ```bash
+<<<<<<< HEAD
 pip install -r requirements.txt
    ```
 
@@ -113,6 +133,45 @@ pip install -r requirements.txt
    npm install -g live-server
    ```
 
+=======
+   pip install -r requirements.txt
+   ```
+
+5. **Set environment variables**:
+
+   * Create a `.env` file in `backend/`:
+
+     ```
+     GEMINI_API_KEY=your_gemini_1.5_api_key_here
+     PORT=8000
+     ```
+
+6. **Run the backend**:
+
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8000
+   ```
+
+7. **Test locally**:
+
+   * Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
+   * Chat endpoint: POST `/chat` with JSON:
+
+     ```json
+     { "text": "Tell me your superpower" }
+     ```
+
+---
+
+## 💻 Frontend Setup (Optional)
+
+1. **Install live-server globally (Node.js required)**:
+
+   ```bash
+   npm install -g live-server
+   ```
+
+>>>>>>> 46c2feafb12cfe72ce9c777df563aadccb51dd76
 2. **Run frontend**:
 
    ```bash
@@ -184,6 +243,7 @@ pip install -r requirements.txt
 7. Deploy! Your backend will be live on Render URL. The frontend is served automatically via FastAPI StaticFiles.
 
 ---
+<<<<<<< HEAD
 
 ## ⚠️ Notes
 
@@ -200,4 +260,20 @@ pip install -r requirements.txt
 
 ---
 
+=======
 
+## ⚠️ Notes
+>>>>>>> 46c2feafb12cfe72ce9c777df563aadccb51dd76
+
+* Gemini 1.5 is required for AI responses. Without a valid key, the app will return **fallback canned responses**.
+* Audio transcription for Gemini is **not implemented** yet.
+* For production, update CORS `allow_origins` to your frontend domain.
+
+---
+
+## 📫 Contact
+
+* GitHub: [rajeshchauhan97](https://github.com/rajeshchauhan97)
+* Email: `sabhavathraju123@gmail.com`
+
+---

@@ -1,122 +1,144 @@
-from fastapi import FastAPI, Request, UploadFile, File
+# backend/app.py
+
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
-from dotenv import load_dotenv
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 import os
 import uvicorn
-import requests
-import asyncio
+import base64
+import tempfile
+import speech_recognition as sr
+import logging
+import datetime
 
-# Load .env file
-load_dotenv()
+# --- Logging ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("personal_voice_bot")
 
-# Gemini API key
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# --- App Initialization ---
+app = FastAPI(title="Personal Voice Bot", version="1.0.0")
 
-app = FastAPI()
-
-# CORS
+# --- CORS Middleware ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with frontend origin in production
+    allow_origins=["*"],  # Replace "*" with frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve frontend
-if os.path.exists("frontend"):
-    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# --- Serve Frontend ---
+frontend_path = "../frontend"
+app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-# Canned responses
-CANNED_RESPONSES = {
-    "life story": "I was trained on a broad range of text to help people learn, build, and write. I focus on clarity, friendly explanations, and practical next steps.",
-    "superpower": "My #1 superpower is turning complex ideas into clear, actionable explanations and examples — I make things easier to understand and use.",
-    "growth areas": "Top three areas I'd like to grow in: 1) maintaining longer-term context across multi-step projects, 2) staying current with the latest research and events, and 3) producing even more concise, actionable plans.",
-    "coworker misconception": "A common misconception is that I always give final answers — I'm most useful when we iterate together, ask follow-ups, and test ideas.",
-    "push boundaries": "I push boundaries by trying new formats, running small experiments, asking better questions, and learning quickly from feedback and failures.",
+# --- Personal Responses ---
+PERSONAL_RESPONSES = {
+    "life_story": "I'm a passionate technology professional who started with computer science and evolved into AI development. I focus on creating solutions that simplify complex technology.",
+    "superpower": "My #1 superpower is rapid learning and clear communication, helping me explain complex concepts simply and bridge gaps between technical teams and users.",
+    "growth_areas": "I aim to grow in: 1) AI ethics, 2) Leadership and mentorship, 3) Product strategy and user-centered design.",
+    "misconception": "People think I'm purely technical, but I'm very people-oriented. Collaboration and understanding different perspectives drive the best solutions.",
+    "boundaries": "I push my boundaries by taking on new projects, seeking diverse feedback, and dedicating time to learn new skills each week."
 }
 
-# Detect intent
-def detect_intent(text: str):
-    t = text.lower()
-    if any(k in t for k in ["life story", "about your life", "who are you", "tell me about your life"]):
-        return "life story"
-    if any(k in t for k in ["superpower", "#1 superpower", "top superpower"]):
-        return "superpower"
-    if any(k in t for k in ["grow in", "growth areas", "areas you'd like to grow", "top 3 areas", "top 3"]):
-        return "growth areas"
-    if any(k in t for k in ["misconception", "coworker", "coworkers think", "misunderstand"]):
-        return "coworker misconception"
-    if any(k in t for k in ["push your boundaries", "push your limits", "push boundaries", "how do you push"]):
-        return "push boundaries"
-    return None
+# --- Helper Functions ---
+def get_personal_response(question: str) -> str:
+    q = question.lower().strip()
+    if any(kw in q for kw in ["life story", "about you", "background", "tell me about yourself"]):
+        return PERSONAL_RESPONSES["life_story"]
+    if any(kw in q for kw in ["superpower", "super power", "strength", "#1"]):
+        return PERSONAL_RESPONSES["superpower"]
+    if any(kw in q for kw in ["grow", "improve", "development", "areas", "top 3"]):
+        return PERSONAL_RESPONSES["growth_areas"]
+    if any(kw in q for kw in ["misconception", "people think", "coworker", "coworkers"]):
+        return PERSONAL_RESPONSES["misconception"]
+    if any(kw in q for kw in ["boundaries", "limits", "push", "challenge"]):
+        return PERSONAL_RESPONSES["boundaries"]
+    return "That's an interesting question! Feel free to ask about my background, strengths, or approach to challenges."
 
-# Gemini chat call
-def call_gemini_chat(prompt: str):
-    if not GEMINI_API_KEY:
-        return None
-    url = "https://generativeai.googleapis.com/v1beta2/models/text-bison-001:generate"
-    headers = {
-        "Authorization": f"Bearer {GEMINI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "prompt": {"text": prompt},
-        "temperature": 0.6,
-        "maxOutputTokens": 300
-    }
+def transcribe_audio(audio_bytes: bytes) -> str:
+    """Convert audio bytes to text using speech recognition"""
     try:
-        resp = requests.post(url, headers=headers, json=data, timeout=15)
-        if resp.status_code != 200:
-            return None
-        res = resp.json()
-        return res.get("candidates", [{}])[0].get("content", "").strip()
+        recognizer = sr.Recognizer()
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+            temp_file.write(audio_bytes)
+            temp_file.flush()
+            with sr.AudioFile(temp_file.name) as source:
+                audio = recognizer.record(source)
+                text = recognizer.recognize_google(audio)
+            os.unlink(temp_file.name)
+        return text
+    except sr.UnknownValueError:
+        return "Sorry, I couldn't understand the audio. Please speak clearly."
     except Exception:
-        return None
+        return "Error processing audio. Please try again."
 
-# Root route
+# --- Uptime ---
+START_TIME = datetime.datetime.utcnow()
+
+# --- Routes ---
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    if os.path.exists("frontend/index.html"):
-        with open("frontend/index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h2>Welcome to Personal Voice Bot API!</h2><p>Use the /chat endpoint to interact.</p>"
+async def serve_frontend():
+    index_file = os.path.join(frontend_path, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return "<h2>Frontend not found. Place your frontend files in ../frontend/</h2>"
 
-# Chat endpoint
-@app.post("/chat")
-async def chat(req: Request):
-    payload = await req.json()
-    text = payload.get("text", "").strip()
-    if not text:
-        return {"ok": False, "error": "No text provided"}
+@app.get("/api/health")
+async def health_check():
+    uptime = datetime.datetime.utcnow() - START_TIME
+    return {
+        "status": "healthy",
+        "message": "Personal Voice Bot API is running",
+        "version": "1.0.0",
+        "uptime_seconds": int(uptime.total_seconds())
+    }
 
-    intent = detect_intent(text)
+@app.get("/api/sample-questions")
+async def sample_questions():
+    return {
+        "questions": [
+            "What should we know about your life story in a few sentences?",
+            "What's your #1 superpower?",
+            "What are the top 3 areas you'd like to grow in?",
+            "What misconception do your coworkers have about you?",
+            "How do you push your boundaries and limits?"
+        ]
+    }
 
-    # Try Gemini if available
-    if GEMINI_API_KEY:
-        loop = asyncio.get_event_loop()
-        ai_answer = await loop.run_in_executor(None, lambda: call_gemini_chat(text))
-        if ai_answer:
-            return {"ok": True, "source": "gemini", "text": ai_answer}
+@app.post("/api/chat")
+async def chat(request: Request):
+    try:
+        payload = await request.json()
+        msg_type = payload.get("type", "text")
 
-    # Use canned responses
-    if intent and intent in CANNED_RESPONSES:
-        return {"ok": True, "source": "canned", "text": CANNED_RESPONSES[intent]}
+        if msg_type == "text":
+            question = payload.get("message", "").strip()
+            if not question:
+                raise HTTPException(status_code=400, detail="No message provided")
+            response = get_personal_response(question)
+            return {"response": response, "type": "text"}
 
-    # Fallback
-    generic = ("I don't have an AI key set on the server, so here's a helpful assistant-style reply: "
-               "Please try rephrasing or ask a specific follow-up.")
-    return {"ok": True, "source": "fallback", "text": generic}
+        elif msg_type == "audio":
+            audio_data = payload.get("audio", "")
+            if not audio_data:
+                raise HTTPException(status_code=400, detail="No audio data provided")
+            try:
+                audio_bytes = base64.b64decode(audio_data.split(",")[1] if "," in audio_data else audio_data)
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid audio data")
+            question = transcribe_audio(audio_bytes)
+            response = get_personal_response(question) if "Sorry" not in question and "Error" not in question else question
+            return {"response": response, "transcribed_question": question, "type": "audio"}
 
-# Audio transcription (still OpenAI Whisper if you want)
-@app.post("/transcribe-audio")
-async def transcribe_audio(file: UploadFile = File(...)):
-    if not GEMINI_API_KEY:
-        return {"ok": False, "error": "Server has no GEMINI_API_KEY for transcription."}
-    return {"ok": False, "error": "Audio transcription is not implemented for Gemini yet."}
+        else:
+            raise HTTPException(status_code=400, detail="Invalid message type")
 
-# Run app
+    except Exception as e:
+        logger.error(f"Error in /api/chat: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# --- Run App ---
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
