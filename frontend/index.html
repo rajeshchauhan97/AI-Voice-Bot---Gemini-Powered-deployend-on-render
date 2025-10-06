@@ -1,18 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Personal Voice Bot</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Voice Bot</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="container">
-<h1>Personal Voice Bot</h1>
-<textarea id="userInput" placeholder="Type or speak..."></textarea>
-<button id="sendBtn">Send</button>
-<button id="voiceBtn">🎤 Speak</button>
-<div id="responseBox"></div>
-</div>
-<script src="main.js"></script>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1>🎙️ Personal Voice Bot</h1>
+                <p>Ask me anything about my experiences, skills, and perspectives</p>
+                <div id="status" class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="suggestions-section">
+                <h3>Quick Questions</h3>
+                <div class="suggestion-chips">
+                    <button class="chip" data-question="What should we know about your life story in a few sentences?">
+                        Life Story
+                    </button>
+                    <button class="chip" data-question="What's your #1 superpower?">
+                        Superpower
+                    </button>
+                    <button class="chip" data-question="What are the top 3 areas you'd like to grow in?">
+                        Growth Areas
+                    </button>
+                    <button class="chip" data-question="What misconception do your coworkers have about you?">
+                        Misconception
+                    </button>
+                    <button class="chip" data-question="How do you push your boundaries and limits?">
+                        Pushing Boundaries
+                    </button>
+                </div>
+            </section>
+
+            <section class="chat-section">
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message bot-message">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-content">
+                                <p>Hello! I'm your personal voice bot. Ask me anything about my experiences, skills, or perspectives. Try the quick questions or ask your own!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <div class="input-container">
+                            <input 
+                                type="text" 
+                                id="question-input" 
+                                placeholder="Type your question here..." 
+                                maxlength="500"
+                                autocomplete="off"
+                            >
+                            <button id="send-button" class="send-btn">
+                                <span>Ask</span>
+                            </button>
+                        </div>
+                        <div class="input-hint">
+                            Press Enter to send • Powered by Gemini AI
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Built with FastAPI & Gemini 1.5 Flash • Deployed on Render</p>
+        </footer>
+    </div>
+
+    <script src="/static/main.js"></script>
 </body>
 </html>
