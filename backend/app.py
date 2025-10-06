@@ -1,24 +1,15 @@
-import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import logging
+import google.generativeai as genai
+import os
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-app = FastAPI(
-    title="Personal Voice Bot API",
-    description="AI-powered voice bot",
-    version="1.0.0"
-)
+app = FastAPI()
 
 # CORS middleware
 app.add_middleware(
@@ -29,80 +20,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request models
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
 class ChatRequest(BaseModel):
-    text: str
+    question: str
 
 class ChatResponse(BaseModel):
-    response: str
+    answer: str
     status: str
 
-# Personal responses data
-PERSONAL_RESPONSES = {
-    "life_story": "I'm a passionate technologist who started coding at a young age and evolved into building AI systems. My journey spans from simple websites to complex machine learning solutions, always driven by curiosity and making a positive impact through technology.",
-    "superpower": "My #1 superpower is rapid learning and adaptation. I can quickly understand complex systems and find innovative solutions, which allows me to thrive in fast-paced environments.",
-    "growth_areas": "1) Deepening expertise in AI ethics, 2) Enhancing technical leadership, 3) Mastering scalable system architecture",
-    "misconception": "Many coworkers think I'm always serious, but I actually enjoy humor and building strong team connections.",
-    "boundaries": "I constantly push my boundaries by taking on challenging projects and learning emerging technologies."
-}
+# Personal context for the bot
+PERSONAL_CONTEXT = """
+You are me - a passionate AI developer and technologist. Respond personally and authentically.
 
-def get_response(question: str) -> str:
-    """Get appropriate response based on question content"""
-    question_lower = question.lower()
-    
-    if any(phrase in question_lower for phrase in ['life story', 'about you', 'background']):
-        return PERSONAL_RESPONSES['life_story']
-    elif any(phrase in question_lower for phrase in ['superpower', 'strength', 'best at']):
-        return PERSONAL_RESPONSES['superpower']
-    elif any(phrase in question_lower for phrase in ['grow', 'improve', 'development areas']):
-        return PERSONAL_RESPONSES['growth_areas']
-    elif any(phrase in question_lower for phrase in ['misconception', 'coworker', 'colleague']):
-        return PERSONAL_RESPONSES['misconception']
-    elif any(phrase in question_lower for phrase in ['boundaries', 'limits', 'challenge']):
-        return PERSONAL_RESPONSES['boundaries']
-    else:
-        return "I appreciate your question! Based on my approach to continuous learning, I believe this is an area worth exploring."
+My Background:
+- Started with curiosity about technology solving real-world problems
+- Journey from basic programming to building intelligent systems
+- Believe in continuous learning and pushing boundaries
+- Focus on creating meaningful impact through technology
 
-@app.get("/")
-async def read_root():
-    return {"message": "Personal Voice Bot API is running!"}
+My Key Traits:
+- Superpower: Rapid learning and adaptation
+- Growth areas: AI ethics, technical leadership, scalable architectures
+- Work style: Balance deep technical focus with team collaboration
+- Approach: Take on challenging projects, seek feedback, learn emerging tech
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "Voice Bot API"}
+Always respond in first person, be conversational and genuine. Keep responses to 2-3 sentences maximum.
+"""
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
-        question = request.text.strip()
+        # Combine personal context with user question
+        prompt = f"{PERSONAL_CONTEXT}\n\nQuestion: {request.question}\n\nPersonal Response:"
         
-        if not question:
-            raise HTTPException(status_code=400, detail="Question text is required")
+        response = model.generate_content(prompt)
         
-        logger.info(f"Received question: {question}")
-        response = get_response(question)
-        
-        return ChatResponse(response=response, status="success")
+        return ChatResponse(
+            answer=response.text.strip(),
+            status="success"
+        )
         
     except Exception as e:
-        logger.error(f"Error processing chat request: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return ChatResponse(
+            answer="I appreciate your question! Based on my approach to continuous learning, I'd be happy to discuss this further.",
+            status="error"
+        )
 
-@app.get("/profile")
-async def get_profile():
-    return {
-        "suggested_questions": [
-            "What should we know about your life story?",
-            "What's your #1 superpower?",
-            "What are your top 3 growth areas?",
-            "What misconception do coworkers have about you?",
-            "How do you push your boundaries?"
-        ]
-    }
+@app.get("/")
+async def root():
+    return {"message": "Voice Bot API is running!"}
 
-# Serve frontend files
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
-
-@app.get("/frontend")
-async def serve_frontend():
-    return FileResponse('../frontend/index.html')
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

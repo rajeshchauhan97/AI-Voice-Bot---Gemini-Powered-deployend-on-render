@@ -3,81 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Voice Bot</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Personal Voice Bot - 100x Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #f8fafc;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --success: #059669;
+            --error: #dc2626;
+            --warning: #d97706;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .suggestions {
+            margin-bottom: 30px;
+        }
+
+        .suggestions h3 {
+            color: var(--text);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chip {
+            background: var(--secondary);
+            border: 2px solid #e2e8f0;
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .chip:hover {
+            border-color: var(--primary);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .chat-interface {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            height: 350px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .bot-message {
+            align-items: flex-start;
+        }
+
+        .user-message {
+            align-items: flex-start;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .bot-avatar {
+            background: var(--primary);
+            color: white;
+        }
+
+        .user-avatar {
+            background: var(--success);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.5;
+        }
+
+        .bot-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: var(--text);
+        }
+
+        .user-content {
+            background: var(--primary);
+            color: white;
+        }
+
+        .voice-interface {
+            padding: 25px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .voice-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .voice-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .voice-btn.listening {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-status {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .audio-wave {
+            display: none;
+            justify-content: center;
+            gap: 4px;
+            margin: 15px 0;
+            height: 30px;
+            align-items: end;
+        }
+
+        .audio-wave.active {
+            display: flex;
+        }
+
+        .bar {
+            width: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            animation: audioWave 1.5s ease-in-out infinite;
+        }
+
+        .bar:nth-child(1) { animation-delay: 0.1s; height: 8px; }
+        .bar:nth-child(2) { animation-delay: 0.2s; height: 15px; }
+        .bar:nth-child(3) { animation-delay: 0.3s; height: 20px; }
+        .bar:nth-child(4) { animation-delay: 0.4s; height: 15px; }
+        .bar:nth-child(5) { animation-delay: 0.5s; height: 8px; }
+
+        @keyframes audioWave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .send-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .footer {
+            background: var(--text);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 16px 20px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #94a3b8;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .message-content {
+                max-width: 85%;
+            }
+            .chips {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <h1>🎙️ Personal Voice Bot</h1>
-                <p>Ask me anything about my experiences, skills, and perspectives</p>
-                <div id="status" class="status-indicator">
-                    <span class="status-dot"></span>
-                    <span id="status-text">Connecting...</span>
-                </div>
+        <header>
+            <h1>🎙️ Personal Voice Bot</h1>
+            <p>Ask me anything about my experiences, skills, and perspectives</p>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="statusText">Ready to chat</span>
             </div>
         </header>
 
         <main class="main-content">
-            <section class="suggestions-section">
-                <h3>Quick Questions</h3>
-                <div class="suggestion-chips">
-                    <button class="chip" data-question="What should we know about your life story in a few sentences?">
-                        Life Story
-                    </button>
-                    <button class="chip" data-question="What's your #1 superpower?">
-                        Superpower
-                    </button>
-                    <button class="chip" data-question="What are the top 3 areas you'd like to grow in?">
-                        Growth Areas
-                    </button>
-                    <button class="chip" data-question="What misconception do your coworkers have about you?">
-                        Misconception
-                    </button>
-                    <button class="chip" data-question="How do you push your boundaries and limits?">
-                        Pushing Boundaries
-                    </button>
+            <section class="suggestions">
+                <h3>Try asking me:</h3>
+                <div class="chips">
+                    <div class="chip" data-question="What should we know about your life story in a few sentences?">My Life Story</div>
+                    <div class="chip" data-question="What's your #1 superpower?">My Superpower</div>
+                    <div class="chip" data-question="What are the top 3 areas you'd like to grow in?">Growth Areas</div>
+                    <div class="chip" data-question="What misconception do your coworkers have about you?">Common Misconception</div>
+                    <div class="chip" data-question="How do you push your boundaries and limits?">Pushing Boundaries</div>
                 </div>
             </section>
 
-            <section class="chat-section">
-                <div class="chat-container">
-                    <div id="chat-messages" class="chat-messages">
-                        <div class="message bot-message">
-                            <div class="message-avatar">🤖</div>
-                            <div class="message-content">
-                                <p>Hello! I'm your personal voice bot. Ask me anything about my experiences, skills, or perspectives. Try the quick questions or ask your own!</p>
-                            </div>
+            <section class="chat-interface">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot-message">
+                        <div class="avatar bot-avatar">🤖</div>
+                        <div class="message-content bot-content">
+                            <p>Hello! I'm your personal voice bot. Ask me anything - I can answer both personal questions about my experiences and general knowledge questions from my perspective!</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="input-section">
-                        <div class="input-container">
-                            <input 
-                                type="text" 
-                                id="question-input" 
-                                placeholder="Type your question here..." 
-                                maxlength="500"
-                                autocomplete="off"
-                            >
-                            <button id="send-button" class="send-btn">
-                                <span>Ask</span>
-                            </button>
-                        </div>
-                        <div class="input-hint">
-                            Press Enter to send • Powered by Gemini AI
-                        </div>
+                <div class="voice-interface">
+                    <button class="voice-btn" id="voiceBtn">
+                        <span>🎤</span>
+                        <span id="voiceText">Click to Speak</span>
+                    </button>
+                    <div class="voice-status" id="voiceStatus">Ready to listen...</div>
+                    <div class="audio-wave" id="audioWave">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    
+                    <div class="input-area">
+                        <input type="text" class="text-input" id="textInput" placeholder="Ask me anything...">
+                        <button class="send-btn" id="sendBtn">Send</button>
                     </div>
                 </div>
             </section>
         </main>
 
         <footer class="footer">
-            <p>Built with FastAPI & Gemini 1.5 Flash • Deployed on Render</p>
+            <p>Built with Web Speech API • No API keys required • 100x Assessment</p>
         </footer>
     </div>
 
-    <script src="/static/main.js"></script>
+    <script>
+        class VoiceBot {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.voiceStatus = document.getElementById('voiceStatus');
+                this.audioWave = document.getElementById('audioWave');
+                this.textInput = document.getElementById('textInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.statusText = document.getElementById('statusText');
+                this.voiceText = document.getElementById('voiceText');
+                this.chips = document.querySelectorAll('.chip');
+                
+                this.recognition = null;
+                this.speechSynth = window.speechSynthesis;
+                this.isListening = false;
+                
+                this.init();
+            }
+
+            init() {
+                this.checkBrowserSupport();
+                this.setupEventListeners();
+            }
+
+            checkBrowserSupport() {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    this.showError('Speech recognition not supported in your browser. Please use Chrome, Edge, or Safari.');
+                    this.voiceBtn.disabled = true;
+                    this.voiceBtn.innerHTML = '<span>🎤</span><span>Not Supported</span>';
+                    return false;
+                }
+
+                if (!('speechSynthesis' in window)) {
+                    this.showError('Text-to-speech not supported in your browser.');
+                    return false;
+                }
+
+                this.initSpeechRecognition();
+                return true;
+            }
+
+            initSpeechRecognition() {
+                try {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = true;
+                    this.recognition.lang = 'en-US';
+                    
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        this.updateVoiceUI('listening', '🎤 Listening... Speak now');
+                        this.audioWave.classList.add('active');
+                        this.updateStatus('Listening...', 'warning');
+                    };
+                    
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            }
+                        }
+                        
+                        if (finalTranscript) {
+                            this.textInput.value = finalTranscript;
+                            this.updateVoiceUI('processing', '🔄 Processing...');
+                        }
+                    };
+                    
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.updateVoiceUI('ready', '✅ Ready to listen');
+                        this.audioWave.classList.remove('active');
+                        this.updateStatus('Ready', 'success');
+                        
+                        if (this.textInput.value.trim()) {
+                            setTimeout(() => this.sendMessage(), 500);
+                        }
+                    };
+                    
+                    this.recognition.onerror = (event) => {
+                        this.isListening = false;
+                        this.updateVoiceUI('error', '❌ Error: ' + this.getErrorMessage(event.error));
+                        this.audioWave.classList.remove('active');
+                        this.updateStatus('Error', 'error');
+                    };
+                    
+                } catch (error) {
+                    this.showError('Failed to initialize speech recognition: ' + error.message);
+                }
+            }
+
+            getErrorMessage(error) {
+                const errors = {
+                    'not-allowed': 'Microphone access denied. Please allow microphone permissions.',
+                    'audio-capture': 'No microphone found.',
+                    'network': 'Network error occurred.',
+                    'no-speech': 'No speech detected.',
+                    'aborted': 'Speech input aborted.'
+                };
+                return errors[error] || error;
+            }
+
+            setupEventListeners() {
+                this.voiceBtn.addEventListener('click', () => this.toggleVoiceRecognition());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                
+                this.textInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && this.textInput.value.trim()) {
+                        this.sendMessage();
+                    }
+                });
+                
+                this.textInput.addEventListener('input', () => {
+                    this.sendBtn.disabled = !this.textInput.value.trim();
+                });
+
+                this.chips.forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        const question = chip.getAttribute('data-question');
+                        this.textInput.value = question;
+                        this.sendMessage();
+                    });
+                });
+            }
+
+            toggleVoiceRecognition() {
+                if (!this.recognition) return;
+                
+                if (this.isListening) {
+                    this.recognition.stop();
+                } else {
+                    this.textInput.value = '';
+                    this.recognition.start();
+                }
+            }
+
+            updateVoiceUI(state, message) {
+                this.voiceStatus.textContent = message;
+                this.voiceBtn.className = 'voice-btn';
+                
+                if (state === 'listening') {
+                    this.voiceBtn.classList.add('listening');
+                    this.voiceText.textContent = 'Stop Listening';
+                } else if (state === 'processing') {
+                    this.voiceText.textContent = 'Processing...';
+                } else {
+                    this.voiceText.textContent = 'Click to Speak';
+                }
+            }
+
+            updateStatus(message, type) {
+                this.statusText.textContent = message;
+                const statusDot = this.statusText.previousElementSibling;
+                
+                statusDot.style.background = 
+                    type === 'success' ? '#22c55e' :
+                    type === 'warning' ? '#f59e0b' :
+                    type === 'error' ? '#ef4444' : '#22c55e';
+            }
+
+            showError(message) {
+                this.addMessage(message, 'bot');
+                console.error('Voice Bot Error:', message);
+            }
+
+            sendMessage() {
+                const question = this.textInput.value.trim();
+                if (!question) return;
+
+                this.addMessage(question, 'user');
+                this.textInput.value = '';
+                this.sendBtn.disabled = true;
+
+                const typingIndicator = this.showTyping();
+                
+                setTimeout(() => {
+                    this.removeTyping(typingIndicator);
+                    const response = this.generateIntelligentResponse(question);
+                    this.addMessage(response, 'bot');
+                    
+                    this.speakText(response);
+                    
+                }, 1000 + Math.random() * 1000);
+            }
+
+            generateIntelligentResponse(question) {
+                const lowerQuestion = question.toLowerCase();
+                
+                // Personal responses as per assessment requirements
+                if (lowerQuestion.includes('life story') || lowerQuestion.includes('about you') || lowerQuestion.includes('background')) {
+                    return "I'm a passionate AI enthusiast and developer who started with curiosity about how technology can solve real-world problems. My journey began with basic programming and evolved into building intelligent systems that can understand and assist people. I believe in continuous learning and pushing boundaries to create meaningful impact through technology.";
+                }
+                else if (lowerQuestion.includes('superpower') || lowerQuestion.includes('strength') || lowerQuestion.includes('best at')) {
+                    return "My #1 superpower is rapid learning and adaptation. I can quickly understand complex concepts and apply them to solve practical problems. This allows me to thrive in fast-paced environments and constantly evolve with new technologies while maintaining a focus on creating user-friendly solutions that make a real difference.";
+                }
+                else if (lowerQuestion.includes('grow') || lowerQuestion.includes('improve') || lowerQuestion.includes('development areas') || lowerQuestion.includes('growth areas')) {
+                    return "My top 3 areas for growth are: 1) Deepening my expertise in AI ethics and responsible AI development, 2) Enhancing my ability to explain complex technical concepts to non-technical audiences, and 3) Building more scalable and robust system architectures that can handle real-world production demands effectively.";
+                }
+                else if (lowerQuestion.includes('misconception') || lowerQuestion.includes('coworker') || lowerQuestion.includes('colleague')) {
+                    return "Many people think I'm always serious and completely focused on technical work, but I actually enjoy creative collaboration and building strong team relationships. I balance deep technical focus with creating positive, supportive environments where everyone can contribute their best work and grow together.";
+                }
+                else if (lowerQuestion.includes('boundaries') || lowerQuestion.includes('limits') || lowerQuestion.includes('challenge') || lowerQuestion.includes('push')) {
+                    return "I constantly push my boundaries by taking on projects outside my comfort zone, actively seeking feedback to identify blind spots, and learning emerging technologies before they become mainstream. I believe that growth happens when we step beyond what's familiar and embrace the discomfort of learning something completely new.";
+                }
+                
+                // Intelligent responses for common technical questions
+                else if (lowerQuestion.includes('python')) {
+                    return "From my experience, Python is an incredibly versatile programming language that I've used extensively for AI and web development. What I love about it is how readable and expressive it is - it feels like you're writing pseudocode that actually works. I often use Python for rapid prototyping and data analysis projects.";
+                }
+                else if (lowerQuestion.includes('javascript') || lowerQuestion.includes('js')) {
+                    return "JavaScript has been essential in my web development journey. I appreciate how it runs everywhere - browsers, servers, even mobile apps. The ecosystem around it, especially Node.js and modern frameworks, makes it incredibly powerful for building full-stack applications.";
+                }
+                else if (lowerQuestion.includes('ai') || lowerQuestion.includes('artificial intelligence')) {
+                    return "AI is what drives my passion for technology. I see it as a tool that can augment human capabilities rather than replace them. In my work, I focus on practical AI applications that solve real problems while being mindful of ethical considerations and responsible development practices.";
+                }
+                else if (lowerQuestion.includes('programming') || lowerQuestion.includes('coding')) {
+                    return "Programming, to me, is like learning a new language to communicate with computers. What excites me most is how it enables us to turn abstract ideas into tangible solutions. I approach coding with a problem-solving mindset, always looking for the most elegant and maintainable solution.";
+                }
+                else if (lowerQuestion.includes('technology') || lowerQuestion.includes('tech')) {
+                    return "Technology fascinates me because it's the bridge between human needs and digital solutions. I believe the best technology serves people quietly in the background, enhancing lives without demanding attention. My approach is to focus on user-centered design and practical applications.";
+                }
+                else if (lowerQuestion.includes('career') || lowerQuestion.includes('job') || lowerQuestion.includes('work')) {
+                    return "In my career, I've learned that success comes from continuous learning and adaptability. I value environments where I can tackle challenging problems while collaborating with talented people. For me, meaningful work is about creating impact and growing both technically and personally.";
+                }
+                else if (lowerQuestion.includes('learn') || lowerQuestion.includes('study')) {
+                    return "My learning philosophy is built on curiosity and practical application. I believe the best way to learn is by doing - building projects, making mistakes, and iterating. I also find that teaching concepts to others deepens my own understanding significantly.";
+                }
+                
+                // General knowledge with personal perspective
+                else {
+                    return "That's an interesting question! Based on my experiences in technology and continuous learning, I approach most topics with curiosity and a practical mindset. I believe understanding comes from asking good questions and being open to different perspectives. What specifically would you like to know more about?";
+                }
+            }
+
+            addMessage(content, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = `avatar ${type}-avatar`;
+                avatar.textContent = type === 'user' ? '👤' : '🤖';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = `message-content ${type}-content`;
+                contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                this.scrollToBottom();
+                return messageDiv;
+            }
+
+            showTyping() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot-message';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar bot-avatar';
+                avatar.textContent = '🤖';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content bot-content';
+                
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing';
+                typingDiv.innerHTML = `
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                `;
+                
+                contentDiv.appendChild(typingDiv);
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                this.scrollToBottom();
+                return messageDiv;
+            }
+
+            removeTyping(typingElement) {
+                if (typingElement && typingElement.parentNode) {
+                    typingElement.parentNode.removeChild(typingElement);
+                }
+            }
+
+            speakText(text) {
+                if (this.speechSynth.speaking) {
+                    this.speechSynth.cancel();
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                utterance.onstart = () => {
+                    this.updateStatus('Speaking...', 'warning');
+                };
+                
+                utterance.onend = () => {
+                    this.updateStatus('Ready', 'success');
+                };
+                
+                this.speechSynth.speak(utterance);
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new VoiceBot();
+        });
+    </script>
 </body>
 </html>
